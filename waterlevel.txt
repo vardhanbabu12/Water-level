@@ -1,0 +1,63 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+
+const int trigPin = 9;
+const int echoPin = 10;
+const int relayPin = 7;
+
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(relayPin, OUTPUT);
+
+
+  lcd.begin(16, 2);
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Water Level:");
+
+  
+  digitalWrite(relayPin, LOW); // motor off 
+}
+
+void loop() {
+  
+  long duration, distance;
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  
+  // Calculate distance in centimeters
+  distance = duration * 0.034 / 2;
+
+  
+  int waterLevel = map(distance, 400, 0, 0, 100);
+
+  // Display water level on LCD
+  lcd.setCursor(0, 1);
+  lcd.print("Level:");
+  lcd.print(waterLevel);
+  lcd.print("%    ");
+
+  // Control pump based on water level
+  if (waterLevel < 90) {
+    digitalWrite(relayPin, HIGH); // Pump on
+    lcd.setCursor(10, 1);
+    lcd.print("PumpON ");
+  } else if (waterLevel > 90) {
+    digitalWrite(relayPin, LOW); // Pump off
+    lcd.setCursor(10, 1);
+    lcd.print("PumpOFF");
+  }
+
+  delay(1000); 
+}
